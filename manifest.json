@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-album-fetcher",
+  "name": "Album Fetcher",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Search for music albums via MusicBrainz and create formatted markdown notes",
+  "author": "Album Fetcher",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

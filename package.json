@@ -1,0 +1,19 @@
+{
+  "name": "obsidian-album-fetcher",
+  "version": "1.0.0",
+  "description": "Obsidian plugin to search for music albums and create markdown notes",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "esbuild": "^0.20.0",
+    "obsidian": "^1.5.3",
+    "typescript": "^5.3.3"
+  }
+}
