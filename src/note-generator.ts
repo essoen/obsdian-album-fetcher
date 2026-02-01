@@ -1,5 +1,6 @@
 import { App, TFolder, normalizePath } from "obsidian";
-import { MusicBrainzRelease, PluginSettings } from "./types";
+import { AlbumStatus, MusicBrainzRelease, PluginSettings } from "./types";
+import { STATUS_DISPLAY_NAMES } from "./constants";
 
 export class NoteGenerator {
   private app: App;
@@ -14,14 +15,14 @@ export class NoteGenerator {
     this.settings = settings;
   }
 
-  async createAlbumNote(release: MusicBrainzRelease): Promise<string> {
-    const folderPath = this.getFolderPath(release);
+  async createAlbumNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string): Promise<string> {
+    const folderPath = this.getFolderPath(release, status);
     await this.ensureFolderExists(folderPath);
 
     const filename = this.generateFilename(release);
     const filePath = normalizePath(`${folderPath}/${filename}.md`);
 
-    const content = this.generateNoteContent(release);
+    const content = this.generateNoteContent(release, status, rating);
 
     const existingFile = this.app.vault.getAbstractFileByPath(filePath);
     if (existingFile) {
@@ -35,10 +36,11 @@ export class NoteGenerator {
     return filePath;
   }
 
-  private getFolderPath(release: MusicBrainzRelease): string {
-    let folderPath = this.settings.folderPath;
+  private getFolderPath(release: MusicBrainzRelease, status: AlbumStatus): string {
+    const statusConfig = this.settings.statuses[status];
+    let folderPath = statusConfig.folderPath;
 
-    if (this.settings.useYearFolders) {
+    if (statusConfig.useYearFolders) {
       const year = this.settings.folderYearMode === 'current'
         ? new Date().getFullYear()
         : release.year;
@@ -97,11 +99,11 @@ export class NoteGenerator {
     return filePath;
   }
 
-  private generateNoteContent(release: MusicBrainzRelease): string {
+  private generateNoteContent(release: MusicBrainzRelease, status: AlbumStatus, rating: string): string {
     const now = new Date().toISOString();
     const genres = this.getGenres(release);
 
-    const frontmatter = this.generateFrontmatter(release, now, genres);
+    const frontmatter = this.generateFrontmatter(release, now, genres, status, rating);
     const body = this.generateBody(release);
 
     return `${frontmatter}\n${body}`;
@@ -120,12 +122,18 @@ export class NoteGenerator {
   private generateFrontmatter(
     release: MusicBrainzRelease,
     timestamp: string,
-    genres: string[]
+    genres: string[],
+    status: AlbumStatus,
+    rating: string
   ): string {
     const lines: string[] = ["---"];
 
-    lines.push("Status: Done");
-    lines.push("Rating: []");
+    lines.push(`Status: ${STATUS_DISPLAY_NAMES[status]}`);
+    if (rating) {
+      lines.push(`Rating: "${rating}"`);
+    } else {
+      lines.push("Rating: []");
+    }
 
     if (genres.length > 0) {
       lines.push("Genre:");
@@ -186,12 +194,6 @@ export class NoteGenerator {
       lines.push(`- **Genres:** ${release.genres.join(", ")}`);
     }
 
-    lines.push("");
-    lines.push("## My Rating");
-    lines.push("");
-    lines.push("");
-    lines.push("## My Review");
-    lines.push("");
     lines.push("");
 
     return lines.join("\n");

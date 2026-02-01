@@ -1,6 +1,12 @@
-export interface PluginSettings {
+export type AlbumStatus = 'listening' | 'done' | 'to-listen';
+
+export interface StatusConfig {
   folderPath: string;
   useYearFolders: boolean;
+}
+
+export interface PluginSettings {
+  statuses: Record<AlbumStatus, StatusConfig>;
   folderYearMode: 'release' | 'current';
   filenameTemplate: string;
   defaultGenre: string;

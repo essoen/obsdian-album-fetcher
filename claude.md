@@ -4,6 +4,11 @@
 
 ## Recent Changes
 
+### v1.2 - Album Cover Previews
+- **Cover art thumbnails**: Search results now display 50x50px album cover images
+- **Graceful fallback**: Shows ♪ placeholder when cover art unavailable (404)
+- **Flexbox layout**: Results use image + text layout with proper alignment
+
 ### v1.1 - Single Search + Improved Genres
 - **Single search field**: Replaced separate artist/album inputs with one unified search field
 - **Fuzzy matching**: Typos now work (e.g., "pink flyd wall" → The Wall)
@@ -15,12 +20,14 @@
 
 ## To Verify
 
-1. **Single search field** - Only one input field with placeholder "Artist, album, or both..."
-2. **Fuzzy search works** - Try "beatles abbey" → Abbey Road, "pink flyd wall" → The Wall
-3. **Genre fetching** - "Fetching album details..." notice appears before note creation
-4. **Lowercase genres** - Genres in created notes are lowercase
-5. **Max genres setting** - Slider appears in settings (1-10), limits genres in created notes
-6. **Default genre fallback** - Works when MusicBrainz has no genre data
+1. **Album cover previews** - Search results show album art thumbnails on the left
+2. **Cover art fallback** - Obscure albums without art show ♪ placeholder
+3. **Single search field** - Only one input field with placeholder "Artist, album, or both..."
+4. **Fuzzy search works** - Try "beatles abbey" → Abbey Road, "pink flyd wall" → The Wall
+5. **Genre fetching** - "Fetching album details..." notice appears before note creation
+6. **Lowercase genres** - Genres in created notes are lowercase
+7. **Max genres setting** - Slider appears in settings (1-10), limits genres in created notes
+8. **Default genre fallback** - Works when MusicBrainz has no genre data
 
 ---
 

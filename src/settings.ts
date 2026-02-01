@@ -1,5 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AlbumFetcherPlugin from "./main";
+import { AlbumStatus } from "./types";
+import { STATUS_DISPLAY_NAMES } from "./constants";
 
 export class AlbumFetcherSettingTab extends PluginSettingTab {
   plugin: AlbumFetcherPlugin;
@@ -16,47 +18,59 @@ export class AlbumFetcherSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Album Fetcher Settings" });
 
-    new Setting(containerEl)
-      .setName("Album notes folder")
-      .setDesc("Folder where album notes will be created")
-      .addText((text) =>
-        text
-          .setPlaceholder("Music/Albums")
-          .setValue(this.plugin.settings.folderPath)
-          .onChange(async (value) => {
-            this.plugin.settings.folderPath = value;
-            await this.plugin.saveSettings();
-          })
-      );
+    // Status folder settings
+    containerEl.createEl("h3", { text: "Status Folders" });
 
-    new Setting(containerEl)
-      .setName("Use year-based folders")
-      .setDesc("Organize albums into subfolders by year")
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.useYearFolders)
-          .onChange(async (value) => {
-            this.plugin.settings.useYearFolders = value;
-            await this.plugin.saveSettings();
-            this.display(); // Re-render to show/hide folder year mode
-          })
-      );
+    const statuses: AlbumStatus[] = ['listening', 'done', 'to-listen'];
 
-    if (this.plugin.settings.useYearFolders) {
+    for (const status of statuses) {
       new Setting(containerEl)
-        .setName("Folder year")
-        .setDesc("Which year to use for folder organization")
-        .addDropdown((dropdown) =>
-          dropdown
-            .addOption("release", "Album release year")
-            .addOption("current", "Year added")
-            .setValue(this.plugin.settings.folderYearMode)
-            .onChange(async (value: 'release' | 'current') => {
-              this.plugin.settings.folderYearMode = value;
+        .setName(`${STATUS_DISPLAY_NAMES[status]} folder`)
+        .setDesc(`Folder for albums with "${STATUS_DISPLAY_NAMES[status]}" status`)
+        .addText((text) =>
+          text
+            .setPlaceholder(`Music/${STATUS_DISPLAY_NAMES[status]}`)
+            .setValue(this.plugin.settings.statuses[status].folderPath)
+            .onChange(async (value) => {
+              this.plugin.settings.statuses[status].folderPath = value;
               await this.plugin.saveSettings();
             })
         );
+
+      // Year folders toggle only for 'done' status
+      if (status === 'done') {
+        new Setting(containerEl)
+          .setName("Use year-based folders for Done")
+          .setDesc("Organize completed albums into subfolders by year")
+          .addToggle((toggle) =>
+            toggle
+              .setValue(this.plugin.settings.statuses[status].useYearFolders)
+              .onChange(async (value) => {
+                this.plugin.settings.statuses[status].useYearFolders = value;
+                await this.plugin.saveSettings();
+                this.display(); // Re-render to show/hide folder year mode
+              })
+          );
+
+        if (this.plugin.settings.statuses['done'].useYearFolders) {
+          new Setting(containerEl)
+            .setName("Folder year")
+            .setDesc("Which year to use for folder organization")
+            .addDropdown((dropdown) =>
+              dropdown
+                .addOption("release", "Album release year")
+                .addOption("current", "Year added")
+                .setValue(this.plugin.settings.folderYearMode)
+                .onChange(async (value: 'release' | 'current') => {
+                  this.plugin.settings.folderYearMode = value;
+                  await this.plugin.saveSettings();
+                })
+            );
+        }
+      }
     }
+
+    containerEl.createEl("h3", { text: "Other Settings" });
 
     new Setting(containerEl)
       .setName("Filename template")

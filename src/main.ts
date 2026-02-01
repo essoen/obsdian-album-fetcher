@@ -1,9 +1,10 @@
 import { Notice, Plugin } from "obsidian";
-import { PluginSettings } from "./types";
+import { AlbumStatus, PluginSettings, MusicBrainzRelease } from "./types";
 import { DEFAULT_SETTINGS } from "./constants";
 import { MusicBrainzClient } from "./musicbrainz-client";
 import { SearchModal } from "./search-modal";
-import { ResultsModal } from "./results-modal";
+import { StatusModal } from "./status-modal";
+import { RatingModal } from "./rating-modal";
 import { NoteGenerator } from "./note-generator";
 import { AlbumFetcherSettingTab } from "./settings";
 
@@ -42,34 +43,30 @@ export default class AlbumFetcherPlugin extends Plugin {
   }
 
   private openSearchModal() {
-    new SearchModal(this.app, async (query) => {
-      await this.performSearch(query);
+    new SearchModal(
+      this.app,
+      (artist, album) => this.musicBrainzClient.searchAlbums(artist, album),
+      (release) => this.showStatusModal(release)
+    ).open();
+  }
+
+  private showStatusModal(release: MusicBrainzRelease) {
+    new StatusModal(this.app, release.title, (status) => {
+      if (status === 'done') {
+        this.showRatingModal(release, status);
+      } else {
+        this.createNote(release, status, '');
+      }
     }).open();
   }
 
-  private async performSearch(query: string) {
-    new Notice("Searching MusicBrainz...");
-
-    try {
-      const results = await this.musicBrainzClient.searchAlbums(query);
-
-      if (results.length === 0) {
-        new Notice("No albums found. Try a different search.");
-        return;
-      }
-
-      new ResultsModal(this.app, results, async (release) => {
-        await this.createNote(release);
-      }).open();
-    } catch (error) {
-      console.error("Search error:", error);
-      new Notice(
-        error instanceof Error ? error.message : "Search failed. Please try again."
-      );
-    }
+  private showRatingModal(release: MusicBrainzRelease, status: AlbumStatus) {
+    new RatingModal(this.app, release.title, async (rating) => {
+      await this.createNote(release, status, rating);
+    }).open();
   }
 
-  private async createNote(release: import("./types").MusicBrainzRelease) {
+  private async createNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string) {
     if (!this.noteGenerator) {
       new Notice("Plugin not properly initialized.");
       return;
@@ -79,16 +76,20 @@ export default class AlbumFetcherPlugin extends Plugin {
       new Notice("Fetching album details...");
 
       // Fetch genres from release-group API
+      console.log("Release group ID:", release.releaseGroupId);
       if (release.releaseGroupId) {
         const genres = await this.musicBrainzClient.fetchGenres(
           release.releaseGroupId,
           this.settings.maxGenres
         );
+        console.log("Fetched genres:", genres);
         release.genres = genres;
+      } else {
+        console.log("No release group ID, skipping genre fetch");
       }
 
       new Notice("Creating album note...");
-      const filePath = await this.noteGenerator.createAlbumNote(release);
+      const filePath = await this.noteGenerator.createAlbumNote(release, status, rating);
       new Notice(`Created: ${filePath}`);
 
       // Open the created note

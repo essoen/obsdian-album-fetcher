@@ -39,20 +39,37 @@ export class MusicBrainzClient {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async searchAlbums(query: string): Promise<MusicBrainzRelease[]> {
-    const trimmed = query.trim();
-    if (!trimmed) {
+  async searchAlbums(artist: string, album: string): Promise<MusicBrainzRelease[]> {
+    const artistTrimmed = artist.trim();
+    const albumTrimmed = album.trim();
+
+    if (!artistTrimmed && !albumTrimmed) {
       return [];
     }
 
-    // Use general query with fuzzy matching
-    // Adding ~ enables fuzzy search in MusicBrainz Lucene
-    const fuzzyQuery = trimmed
-      .split(/\s+/)
-      .map((term) => `${this.escapeQuery(term)}~`)
-      .join(" ");
+    // Build field-specific query for better results
+    const queryParts: string[] = [];
 
-    const url = `${MUSICBRAINZ_API_BASE}/release?query=${encodeURIComponent(fuzzyQuery)}&fmt=json&limit=15`;
+    if (artistTrimmed) {
+      // Use artist field with fuzzy matching
+      const artistTerms = artistTrimmed
+        .split(/\s+/)
+        .map((term) => `${this.escapeQuery(term)}~`)
+        .join(" ");
+      queryParts.push(`artist:(${artistTerms})`);
+    }
+
+    if (albumTrimmed) {
+      // Use release field with fuzzy matching
+      const albumTerms = albumTrimmed
+        .split(/\s+/)
+        .map((term) => `${this.escapeQuery(term)}~`)
+        .join(" ");
+      queryParts.push(`release:(${albumTerms})`);
+    }
+
+    const query = queryParts.join(" AND ");
+    const url = `${MUSICBRAINZ_API_BASE}/release?query=${encodeURIComponent(query)}&inc=release-groups&fmt=json&limit=15`;
 
     try {
       const response =
@@ -78,6 +95,7 @@ export class MusicBrainzClient {
       const label = labelInfo?.[0]?.label?.name;
 
       const releaseGroup = release["release-group"];
+      console.log("Raw release-group:", releaseGroup);
       const year = this.extractYear(release.date);
 
       return {
