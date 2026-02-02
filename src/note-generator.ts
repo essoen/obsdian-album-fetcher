@@ -15,14 +15,14 @@ export class NoteGenerator {
     this.settings = settings;
   }
 
-  async createAlbumNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string): Promise<string> {
+  async createAlbumNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string = ''): Promise<string> {
     const folderPath = this.getFolderPath(release, status);
     await this.ensureFolderExists(folderPath);
 
     const filename = this.generateFilename(release);
     const filePath = normalizePath(`${folderPath}/${filename}.md`);
 
-    const content = this.generateNoteContent(release, status, rating);
+    const content = this.generateNoteContent(release, status, rating, userNote);
 
     const existingFile = this.app.vault.getAbstractFileByPath(filePath);
     if (existingFile) {
@@ -99,12 +99,12 @@ export class NoteGenerator {
     return filePath;
   }
 
-  private generateNoteContent(release: MusicBrainzRelease, status: AlbumStatus, rating: string): string {
+  private generateNoteContent(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string): string {
     const now = new Date().toISOString();
     const genres = this.getGenres(release);
 
     const frontmatter = this.generateFrontmatter(release, now, genres, status, rating);
-    const body = this.generateBody(release);
+    const body = this.generateBody(release, userNote);
 
     return `${frontmatter}\n${body}`;
   }
@@ -164,7 +164,7 @@ export class NoteGenerator {
     return lines.join("\n");
   }
 
-  private generateBody(release: MusicBrainzRelease): string {
+  private generateBody(release: MusicBrainzRelease, userNote: string = ''): string {
     const lines: string[] = [];
 
     lines.push(`# ${release.title}`);
@@ -195,6 +195,14 @@ export class NoteGenerator {
     }
 
     lines.push("");
+
+    // Add user notes if provided
+    if (userNote) {
+      lines.push("## Notes");
+      lines.push("");
+      lines.push(userNote);
+      lines.push("");
+    }
 
     return lines.join("\n");
   }

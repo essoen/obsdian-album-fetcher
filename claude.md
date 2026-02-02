@@ -4,6 +4,12 @@
 
 ## Recent Changes
 
+### v1.3 - Rating Modal Improvements & User Notes
+- **Rating modal album display**: Shows album cover (80x80px), title, artist, and metadata (year/label/country)
+- **User notes for rated albums**: Optional text area to add personal notes when rating an album
+- **Notes section in generated notes**: User notes appear under "## Notes" heading in the markdown file
+- **Rating description fix**: Long rating descriptions now wrap correctly instead of overflowing
+
 ### v1.2 - Album Cover Previews
 - **Cover art thumbnails**: Search results now display 50x50px album cover images
 - **Graceful fallback**: Shows ♪ placeholder when cover art unavailable (404)
@@ -20,14 +26,16 @@
 
 ## To Verify
 
-1. **Album cover previews** - Search results show album art thumbnails on the left
-2. **Cover art fallback** - Obscure albums without art show ♪ placeholder
-3. **Single search field** - Only one input field with placeholder "Artist, album, or both..."
-4. **Fuzzy search works** - Try "beatles abbey" → Abbey Road, "pink flyd wall" → The Wall
-5. **Genre fetching** - "Fetching album details..." notice appears before note creation
-6. **Lowercase genres** - Genres in created notes are lowercase
-7. **Max genres setting** - Slider appears in settings (1-10), limits genres in created notes
-8. **Default genre fallback** - Works when MusicBrainz has no genre data
+1. **Rating modal album info** - Rating modal shows album cover, title, artist, and metadata
+2. **User notes input** - Text area appears below rating buttons for optional notes
+3. **Notes in generated file** - User notes appear under "## Notes" heading in markdown
+4. **Rating description wrapping** - Long rating descriptions wrap properly in buttons
+5. **Album cover previews** - Search results show album art thumbnails on the left
+6. **Cover art fallback** - Obscure albums without art show ♪ placeholder
+7. **Fuzzy search works** - Try "beatles abbey" → Abbey Road, "pink flyd wall" → The Wall
+8. **Genre fetching** - "Fetching album details..." notice appears before note creation
+9. **Lowercase genres** - Genres in created notes are lowercase
+10. **Max genres setting** - Slider appears in settings (1-10), limits genres in created notes
 
 ---
 
@@ -87,8 +95,9 @@ obsidian-album-fetcher/
     ├── types.ts            # TypeScript interfaces
     ├── constants.ts        # Default settings, API constants
     ├── musicbrainz-client.ts # MusicBrainz API client with rate limiting
-    ├── search-modal.ts     # Search input modal
-    ├── results-modal.ts    # Search results selection modal
+    ├── search-modal.ts     # Search input modal with live results
+    ├── status-modal.ts     # Album status selection (listening/done/to-listen)
+    ├── rating-modal.ts     # Rating selection with album info and notes input
     └── note-generator.ts   # Markdown file creation
 ```
 
@@ -138,11 +147,9 @@ tags:
 - **Country:** US
 - **Genres:** rock, progressive rock
 
-## My Rating
+## Notes
 
-
-## My Review
-
+User's personal notes about the album (only included if notes were entered during rating)
 ```
 
 ---

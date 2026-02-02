@@ -55,18 +55,18 @@ export default class AlbumFetcherPlugin extends Plugin {
       if (status === 'done') {
         this.showRatingModal(release, status);
       } else {
-        this.createNote(release, status, '');
+        this.createNote(release, status, '', '');
       }
     }).open();
   }
 
   private showRatingModal(release: MusicBrainzRelease, status: AlbumStatus) {
-    new RatingModal(this.app, release.title, async (rating) => {
-      await this.createNote(release, status, rating);
+    new RatingModal(this.app, release, async (rating, note) => {
+      await this.createNote(release, status, rating, note);
     }).open();
   }
 
-  private async createNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string) {
+  private async createNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string) {
     if (!this.noteGenerator) {
       new Notice("Plugin not properly initialized.");
       return;
@@ -89,7 +89,7 @@ export default class AlbumFetcherPlugin extends Plugin {
       }
 
       new Notice("Creating album note...");
-      const filePath = await this.noteGenerator.createAlbumNote(release, status, rating);
+      const filePath = await this.noteGenerator.createAlbumNote(release, status, rating, userNote);
       new Notice(`Created: ${filePath}`);
 
       // Open the created note

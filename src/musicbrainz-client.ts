@@ -69,11 +69,13 @@ export class MusicBrainzClient {
     }
 
     const query = queryParts.join(" AND ");
-    const url = `${MUSICBRAINZ_API_BASE}/release?query=${encodeURIComponent(query)}&inc=release-groups&fmt=json&limit=15`;
+    // Note: Search endpoint returns release-group data by default, no inc parameter needed
+    const url = `${MUSICBRAINZ_API_BASE}/release?query=${encodeURIComponent(query)}&fmt=json&limit=15`;
 
     try {
       const response =
         await this.rateLimitedRequest<MusicBrainzSearchResponse>(url);
+      console.log("MusicBrainz search response:", JSON.stringify(response.releases?.[0], null, 2));
       return this.parseReleases(response.releases || []);
     } catch (error) {
       console.error("MusicBrainz search error:", error);
@@ -115,18 +117,23 @@ export class MusicBrainzClient {
 
   async fetchGenres(releaseGroupId: string, maxGenres: number): Promise<string[]> {
     if (!releaseGroupId) {
+      console.log("fetchGenres: No releaseGroupId provided");
       return [];
     }
 
     const url = `${MUSICBRAINZ_API_BASE}/release-group/${releaseGroupId}?inc=genres&fmt=json`;
+    console.log("Fetching genres from:", url);
 
     try {
       const response = await this.rateLimitedRequest<{ genres?: Array<{ name: string; count: number }> }>(url);
+      console.log("Genre response:", JSON.stringify(response, null, 2));
       const genres = response.genres || [];
-      return genres
+      const result = genres
         .sort((a, b) => b.count - a.count)
         .slice(0, maxGenres)
         .map((g) => g.name.toLowerCase());
+      console.log("Parsed genres:", result);
+      return result;
     } catch (error) {
       console.error("Failed to fetch genres:", error);
       return [];
