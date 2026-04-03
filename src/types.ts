@@ -11,6 +11,9 @@ export interface PluginSettings {
   filenameTemplate: string;
   defaultGenre: string;
   maxGenres: number;
+  lastfmApiKey: string;
+  lastfmUsername: string;
+  lastfmCompletenessThreshold: number;
 }
 
 export interface MusicBrainzRelease {
@@ -80,4 +83,38 @@ export interface AlbumNote {
   coverArtUrl?: string;
   label?: string;
   country?: string;
+}
+
+export interface LastFmScrobble {
+  artist: string;
+  album: string;
+  track: string;
+  timestamp: number;
+  albumMbid?: string;
+}
+
+export interface LastFmAlbumInfo {
+  name: string;
+  artist: string;
+  trackCount: number;
+  tracks: string[];
+  imageUrl?: string;
+  mbid?: string;
+}
+
+export interface AlbumSuggestion {
+  artist: string;
+  album: string;
+  tracksPlayed: number;
+  totalTracks: number;
+  completeness: number;
+  totalScrobbles: number;
+  lastPlayed: number;
+  imageUrl?: string;
+  albumMbid?: string;
+}
+
+export interface SuggestionWithStatus {
+  suggestion: AlbumSuggestion;
+  alreadyAdded: boolean;
 }

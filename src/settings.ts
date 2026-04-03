@@ -115,5 +115,48 @@ export class AlbumFetcherSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    // Last.fm Integration
+    containerEl.createEl("h3", { text: "Last.fm Integration" });
+
+    new Setting(containerEl)
+      .setName("Last.fm API key")
+      .setDesc("Get a free API key at https://www.last.fm/api/account/create")
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter your Last.fm API key")
+          .setValue(this.plugin.settings.lastfmApiKey)
+          .onChange(async (value) => {
+            this.plugin.settings.lastfmApiKey = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Last.fm username")
+      .setDesc("Your Last.fm username")
+      .addText((text) =>
+        text
+          .setPlaceholder("Username")
+          .setValue(this.plugin.settings.lastfmUsername)
+          .onChange(async (value) => {
+            this.plugin.settings.lastfmUsername = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Completeness threshold")
+      .setDesc("Minimum % of tracks played to consider an album 'fully listened'")
+      .addSlider((slider) =>
+        slider
+          .setLimits(50, 100, 5)
+          .setValue(this.plugin.settings.lastfmCompletenessThreshold)
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.lastfmCompletenessThreshold = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }

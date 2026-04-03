@@ -15,7 +15,7 @@ export class NoteGenerator {
     this.settings = settings;
   }
 
-  async createAlbumNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string = ''): Promise<string> {
+  async createAlbumNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string = '', source: string = 'manual'): Promise<string> {
     const folderPath = this.getFolderPath(release, status);
     await this.ensureFolderExists(folderPath);
 
@@ -103,7 +103,7 @@ export class NoteGenerator {
     const now = new Date().toISOString();
     const genres = this.getGenres(release);
 
-    const frontmatter = this.generateFrontmatter(release, now, genres, status, rating);
+    const frontmatter = this.generateFrontmatter(release, now, genres, status, rating, source);
     const body = this.generateBody(release, userNote);
 
     return `${frontmatter}\n${body}`;
@@ -124,7 +124,8 @@ export class NoteGenerator {
     timestamp: string,
     genres: string[],
     status: AlbumStatus,
-    rating: string
+    rating: string,
+    source: string = 'manual'
   ): string {
     const lines: string[] = ["---"];
 
@@ -154,7 +155,7 @@ export class NoteGenerator {
     }
 
     lines.push("Source for recommendation:");
-    lines.push("  - manual");
+    lines.push(`  - ${source}`);
 
     lines.push("tags:");
     lines.push("  - media/music/album");
