@@ -22,7 +22,7 @@ export class NoteGenerator {
     const filename = this.generateFilename(release);
     const filePath = normalizePath(`${folderPath}/${filename}.md`);
 
-    const content = this.generateNoteContent(release, status, rating, userNote);
+    const content = this.generateNoteContent(release, status, rating, userNote, source);
 
     const existingFile = this.app.vault.getAbstractFileByPath(filePath);
     if (existingFile) {
@@ -99,7 +99,7 @@ export class NoteGenerator {
     return filePath;
   }
 
-  private generateNoteContent(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string): string {
+  private generateNoteContent(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string, source: string = 'manual'): string {
     const now = new Date().toISOString();
     const genres = this.getGenres(release);
 
