@@ -197,10 +197,9 @@ export class NoteGenerator {
 
     lines.push("");
 
-    // Add user notes if provided
+    lines.push("## Notes");
+    lines.push("");
     if (userNote) {
-      lines.push("## Notes");
-      lines.push("");
       lines.push(userNote);
       lines.push("");
     }
