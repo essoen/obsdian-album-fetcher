@@ -172,5 +172,19 @@ export class AlbumFetcherSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl)
+      .setName("Listening history timeframe")
+      .setDesc("How many days of Last.fm history to scan for suggestions (3-30)")
+      .addSlider((slider) =>
+        slider
+          .setLimits(3, 30, 1)
+          .setValue(this.plugin.settings.lastfmLookbackDays)
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.lastfmLookbackDays = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }

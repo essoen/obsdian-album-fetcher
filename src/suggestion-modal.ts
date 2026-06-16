@@ -3,15 +3,18 @@ import { AlbumSuggestion, SuggestionWithStatus } from "./types";
 
 export class SuggestionModal extends Modal {
   private suggestions: SuggestionWithStatus[];
+  private lookbackDays: number;
   private onSelect: (suggestion: AlbumSuggestion) => void;
 
   constructor(
     app: App,
     suggestions: SuggestionWithStatus[],
+    lookbackDays: number,
     onSelect: (suggestion: AlbumSuggestion) => void
   ) {
     super(app);
     this.suggestions = suggestions;
+    this.lookbackDays = lookbackDays;
     this.onSelect = onSelect;
   }
 
@@ -20,7 +23,7 @@ export class SuggestionModal extends Modal {
 
     contentEl.createEl("h2", { text: "Album Suggestions" });
     contentEl.createEl("p", {
-      text: "Based on your Last.fm listening (last 14 days)",
+      text: `Based on your Last.fm listening (last ${this.lookbackDays} days)`,
       cls: "suggestion-subtitle",
     });
 
@@ -128,7 +131,7 @@ export class SuggestionModal extends Modal {
     if (this.suggestions.length === 0) {
       listEl.createEl("div", {
         cls: "suggestion-empty",
-        text: "No fully-listened albums found in the last 14 days.",
+        text: `No fully-listened albums found in the last ${this.lookbackDays} days.`,
       });
       return;
     }

@@ -50,7 +50,7 @@ function parseFilename(
   // Escape regex special chars in template, then replace placeholders with capture groups
   let pattern = template
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    .replace("\\{\\{artist\\}\\}", "(?<artist>.+)")
+    .replace("\\{\\{artist\\}\\}", "(?<artist>.+?)")
     .replace("\\{\\{album\\}\\}", "(?<album>.+)")
     .replace("\\{\\{year\\}\\}", "(?:\\d{4})?");
 

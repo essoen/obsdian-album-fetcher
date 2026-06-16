@@ -204,7 +204,16 @@ export class LastFmClient {
 }
 
 export function normalizeKey(artist: string, album: string): string {
-  return `${artist.toLowerCase().trim()}:::${album.toLowerCase().trim()}`;
+  return `${normalizePart(artist)}:::${normalizePart(album)}`;
+}
+
+function normalizePart(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "") // strip diacritics (e.g. Monáe -> monae)
+    .replace(/[^a-z0-9]+/g, " ") // collapse punctuation/whitespace (colon, dash, etc.)
+    .trim();
 }
 
 class LastFmError extends Error {

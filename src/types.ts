@@ -15,6 +15,7 @@ export interface PluginSettings {
   lastfmUsername: string;
   lastfmCompletenessThreshold: number;
   maxSuggestions: number;
+  lastfmLookbackDays: number;
 }
 
 export interface MusicBrainzRelease {

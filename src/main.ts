@@ -1,6 +1,6 @@
 import { Notice, Plugin } from "obsidian";
 import { AlbumStatus, PluginSettings, MusicBrainzRelease, AlbumSuggestion, SuggestionWithStatus } from "./types";
-import { DEFAULT_SETTINGS, SUGGESTION_LOOKBACK_DAYS } from "./constants";
+import { DEFAULT_SETTINGS } from "./constants";
 import { MusicBrainzClient } from "./musicbrainz-client";
 import { LastFmClient, normalizeKey } from "./lastfm-client";
 import { SearchModal } from "./search-modal";
@@ -102,7 +102,7 @@ export default class AlbumFetcherPlugin extends Plugin {
 
     const allSuggestions = await this.lastFmClient.buildSuggestions(
       this.settings.lastfmUsername,
-      SUGGESTION_LOOKBACK_DAYS
+      this.settings.lastfmLookbackDays
     );
 
     const existingAlbums = getExistingAlbums(this.app, this.settings);
@@ -134,11 +134,13 @@ export default class AlbumFetcherPlugin extends Plugin {
       const available = suggestions.filter((s) => !s.alreadyAdded);
 
       if (available.length === 0) {
-        new Notice("No new fully-listened albums found in the last 14 days.");
+        new Notice(
+          `No new fully-listened albums found in the last ${this.settings.lastfmLookbackDays} days.`
+        );
         return;
       }
 
-      new SuggestionModal(this.app, suggestions, (suggestion) => {
+      new SuggestionModal(this.app, suggestions, this.settings.lastfmLookbackDays, (suggestion) => {
         this.bridgeToMusicBrainz(suggestion);
       }).open();
     } catch (error) {

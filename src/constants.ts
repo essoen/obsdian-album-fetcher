@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   lastfmUsername: "",
   lastfmCompletenessThreshold: 80,
   maxSuggestions: 10,
+  lastfmLookbackDays: 14,
 };
 
 export const STATUS_DISPLAY_NAMES: Record<AlbumStatus, string> = {
