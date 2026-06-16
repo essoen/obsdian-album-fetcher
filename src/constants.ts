@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   lastfmApiKey: "",
   lastfmUsername: "",
   lastfmCompletenessThreshold: 80,
+  maxSuggestions: 10,
 };
 
 export const STATUS_DISPLAY_NAMES: Record<AlbumStatus, string> = {

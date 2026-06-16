@@ -14,6 +14,7 @@ export interface PluginSettings {
   lastfmApiKey: string;
   lastfmUsername: string;
   lastfmCompletenessThreshold: number;
+  maxSuggestions: number;
 }
 
 export interface MusicBrainzRelease {

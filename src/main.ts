@@ -110,6 +110,7 @@ export default class AlbumFetcherPlugin extends Plugin {
 
     return allSuggestions
       .filter((s) => s.completeness >= threshold)
+      .slice(0, this.settings.maxSuggestions)
       .map((suggestion) => ({
         suggestion,
         alreadyAdded: existingAlbums.has(normalizeKey(suggestion.artist, suggestion.album)),

@@ -75,6 +75,7 @@ An Obsidian plugin that searches for music albums via MusicBrainz API and create
 | Filename template | Note filename format | `{{artist}} - {{album}}` |
 | Default genre | Fallback when no genre found | (empty) |
 | Maximum genres | Limit genres fetched from MusicBrainz | 3 |
+| Maximum suggestions | Limit albums suggested from Last.fm listening history (3-20) | 10 |
 
 **Template variables:** `{{artist}}`, `{{album}}`, `{{year}}`
 

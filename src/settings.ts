@@ -158,5 +158,19 @@ export class AlbumFetcherSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl)
+      .setName("Maximum suggestions")
+      .setDesc("Maximum number of albums to suggest from your listening history (3-20)")
+      .addSlider((slider) =>
+        slider
+          .setLimits(3, 20, 1)
+          .setValue(this.plugin.settings.maxSuggestions)
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.maxSuggestions = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }
