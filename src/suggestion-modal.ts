@@ -2,20 +2,24 @@ import { App, Modal } from "obsidian";
 import { AlbumSuggestion, SuggestionWithStatus } from "./types";
 
 export class SuggestionModal extends Modal {
-  private suggestions: SuggestionWithStatus[];
+  private suggestions: SuggestionWithStatus[] | null = null;
   private lookbackDays: number;
   private onSelect: (suggestion: AlbumSuggestion) => void;
+  private listEl: HTMLElement | null = null;
 
   constructor(
     app: App,
-    suggestions: SuggestionWithStatus[],
     lookbackDays: number,
     onSelect: (suggestion: AlbumSuggestion) => void
   ) {
     super(app);
-    this.suggestions = suggestions;
     this.lookbackDays = lookbackDays;
     this.onSelect = onSelect;
+  }
+
+  setSuggestions(suggestions: SuggestionWithStatus[]) {
+    this.suggestions = suggestions;
+    this.renderList();
   }
 
   onOpen() {
@@ -123,10 +127,44 @@ export class SuggestionModal extends Modal {
           text-align: center;
           color: var(--text-muted);
         }
+        .suggestion-loading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          padding: 32px 20px;
+          color: var(--text-muted);
+        }
+        .suggestion-spinner {
+          width: 28px;
+          height: 28px;
+          border: 3px solid var(--background-modifier-border);
+          border-top-color: var(--interactive-accent);
+          border-radius: 50%;
+          animation: suggestion-spin 0.8s linear infinite;
+        }
+        @keyframes suggestion-spin {
+          to { transform: rotate(360deg); }
+        }
       `,
     });
 
-    const listEl = contentEl.createEl("div", { cls: "suggestion-list" });
+    this.listEl = contentEl.createEl("div", { cls: "suggestion-list" });
+    this.renderList();
+  }
+
+  private renderList() {
+    const listEl = this.listEl;
+    if (!listEl) return;
+    listEl.empty();
+
+    // suggestions === null means we're still fetching
+    if (this.suggestions === null) {
+      const loadingEl = listEl.createEl("div", { cls: "suggestion-loading" });
+      loadingEl.createEl("div", { cls: "suggestion-spinner" });
+      loadingEl.createEl("div", { text: "Fetching your listening history…" });
+      return;
+    }
 
     if (this.suggestions.length === 0) {
       listEl.createEl("div", {

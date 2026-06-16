@@ -127,24 +127,19 @@ export default class AlbumFetcherPlugin extends Plugin {
 
     this.ensureLastFmClient();
 
+    const modal = new SuggestionModal(
+      this.app,
+      this.settings.lastfmLookbackDays,
+      (suggestion) => this.bridgeToMusicBrainz(suggestion)
+    );
+    modal.open();
+
     try {
-      new Notice("Fetching your Last.fm listening history...");
-
       const suggestions = await this.fetchSuggestionsWithStatus();
-      const available = suggestions.filter((s) => !s.alreadyAdded);
-
-      if (available.length === 0) {
-        new Notice(
-          `No new fully-listened albums found in the last ${this.settings.lastfmLookbackDays} days.`
-        );
-        return;
-      }
-
-      new SuggestionModal(this.app, suggestions, this.settings.lastfmLookbackDays, (suggestion) => {
-        this.bridgeToMusicBrainz(suggestion);
-      }).open();
+      modal.setSuggestions(suggestions);
     } catch (error) {
       console.error("Last.fm suggestion error:", error);
+      modal.close();
       new Notice(
         error instanceof Error
           ? error.message

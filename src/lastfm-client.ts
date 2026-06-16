@@ -204,7 +204,21 @@ export class LastFmClient {
 }
 
 export function normalizeKey(artist: string, album: string): string {
-  return `${normalizePart(artist)}:::${normalizePart(album)}`;
+  return `${normalizePart(artist)}:::${normalizeAlbum(album)}`;
+}
+
+// Trailing words that denote a release type/edition rather than the album identity.
+const TRAILING_QUALIFIERS = new Set([
+  "ep", "single", "lp", "deluxe", "edition", "remaster", "remastered",
+]);
+
+function normalizeAlbum(album: string): string {
+  const tokens = normalizePart(album).split(" ").filter(Boolean);
+  // Drop trailing qualifier tokens, but never reduce to empty (e.g. a self-titled "EP").
+  while (tokens.length > 1 && TRAILING_QUALIFIERS.has(tokens[tokens.length - 1])) {
+    tokens.pop();
+  }
+  return tokens.join(" ");
 }
 
 function normalizePart(value: string): string {
