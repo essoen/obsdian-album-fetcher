@@ -21,6 +21,8 @@ export interface PluginSettings {
 export interface MusicBrainzRelease {
   id: string;
   releaseGroupId?: string;
+  primaryType?: string;
+  secondaryTypes?: string[];
   title: string;
   artist: string;
   date: string;
@@ -68,6 +70,7 @@ export interface LabelInfo {
 export interface ReleaseGroup {
   id: string;
   "primary-type"?: string;
+  "secondary-types"?: string[];
   genres?: Genre[];
 }
 

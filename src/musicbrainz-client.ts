@@ -103,6 +103,8 @@ export class MusicBrainzClient {
       return {
         id: release.id,
         releaseGroupId: releaseGroup?.id,
+        primaryType: releaseGroup?.["primary-type"],
+        secondaryTypes: releaseGroup?.["secondary-types"],
         title: release.title,
         artist,
         date: release.date || "",

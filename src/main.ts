@@ -2,11 +2,12 @@ import { Notice, Plugin } from "obsidian";
 import { AlbumStatus, PluginSettings, MusicBrainzRelease, AlbumSuggestion, SuggestionWithStatus } from "./types";
 import { DEFAULT_SETTINGS } from "./constants";
 import { MusicBrainzClient } from "./musicbrainz-client";
-import { LastFmClient, normalizeKey } from "./lastfm-client";
+import { LastFmClient, normalizeKey, normalizeAlbum, normalizePart } from "./lastfm-client";
 import { SearchModal } from "./search-modal";
 import { StatusModal } from "./status-modal";
 import { RatingModal } from "./rating-modal";
 import { SuggestionModal } from "./suggestion-modal";
+import { ReleasePickerModal } from "./release-picker-modal";
 import { NoteGenerator } from "./note-generator";
 import { getExistingAlbums } from "./vault-scanner";
 import { AlbumFetcherSettingTab } from "./settings";
@@ -149,52 +150,97 @@ export default class AlbumFetcherPlugin extends Plugin {
   }
 
   private async bridgeToMusicBrainz(suggestion: AlbumSuggestion) {
+    let results: MusicBrainzRelease[] = [];
+
     try {
       new Notice("Looking up album on MusicBrainz...");
-
-      const results = await this.musicBrainzClient.searchAlbums(
+      results = await this.musicBrainzClient.searchAlbums(
         suggestion.artist,
         suggestion.album
       );
-
-      let release: MusicBrainzRelease;
-
-      if (results.length > 0) {
-        // Find best match: prefer exact artist+title match
-        const exactMatch = results.find(
-          (r) =>
-            r.artist.toLowerCase() === suggestion.artist.toLowerCase() &&
-            r.title.toLowerCase() === suggestion.album.toLowerCase()
-        );
-        release = exactMatch || results[0];
-      } else {
-        // Fallback: create release from Last.fm data
-        release = {
-          id: suggestion.albumMbid || "",
-          title: suggestion.album,
-          artist: suggestion.artist,
-          date: "",
-          year: null,
-          genres: [],
-          coverArtUrl: suggestion.imageUrl,
-        };
-      }
-
-      this.showStatusModal(release, 'lastfm');
     } catch (error) {
       console.error("MusicBrainz bridge error:", error);
-      // Fallback to Last.fm data on MusicBrainz failure
-      const release: MusicBrainzRelease = {
-        id: suggestion.albumMbid || "",
-        title: suggestion.album,
-        artist: suggestion.artist,
-        date: "",
-        year: null,
-        genres: [],
-        coverArtUrl: suggestion.imageUrl,
-      };
-      this.showStatusModal(release, 'lastfm');
     }
+
+    // Normalizing the same way duplicate detection does lets titles like "Easy EP"
+    // match the "Easy" release-group instead of falling through to results[0],
+    // which is often a different album entirely.
+    const matches = results.filter(
+      (r) =>
+        normalizePart(r.artist) === normalizePart(suggestion.artist) &&
+        normalizeAlbum(r.title) === normalizeAlbum(suggestion.album)
+    );
+
+    // Matches routinely tie on MusicBrainz's own score (every "The Wall" release
+    // scores 100), so rank by release-group type. Genres live on the release-group,
+    // and a promo EP sharing the album's title usually has none.
+    const confidentMatch = matches
+      .slice()
+      .sort((a, b) => this.releaseGroupRank(a, suggestion) - this.releaseGroupRank(b, suggestion))[0];
+
+    if (confidentMatch) {
+      this.showStatusModal(confidentMatch, 'lastfm');
+      return;
+    }
+
+    if (results.length > 0) {
+      // Ambiguous: let the user pick, since the wrong release means wrong genres.
+      new ReleasePickerModal(this.app, suggestion, results, (release) => {
+        this.showStatusModal(release || this.releaseFromSuggestion(suggestion), 'lastfm');
+      }).open();
+      return;
+    }
+
+    this.showStatusModal(this.releaseFromSuggestion(suggestion), 'lastfm');
+  }
+
+  /** Lower is better. */
+  private releaseGroupRank(release: MusicBrainzRelease, suggestion: AlbumSuggestion): number {
+    // A suggestion that calls itself an EP or single should match one, not the
+    // same-named full album; everything else defaults to preferring the album.
+    const title = suggestion.album.toLowerCase();
+    const preferred = /\bep$/.test(title)
+      ? "EP"
+      : /\bsingle$/.test(title)
+        ? "Single"
+        : "Album";
+
+    let rank: number;
+    if (release.primaryType === preferred) {
+      rank = 0;
+    } else if (release.primaryType === "Album") {
+      rank = 1;
+    } else {
+      rank = 2;
+    }
+
+    // Compilations, live records and remix editions are rarely what was scrobbled.
+    const secondary = release.secondaryTypes || [];
+    if (secondary.length > 0) {
+      rank += 3;
+    }
+
+    return rank;
+  }
+
+  /**
+   * Build a release from Last.fm data alone, for when MusicBrainz has no usable
+   * match. Last.fm's album mbid is a MusicBrainz release-group id in the large
+   * majority of cases, so putting it in releaseGroupId still lets genres be
+   * fetched; it does not belong in `id`, which is only used to build a Cover Art
+   * Archive /release/{mbid} URL that a release-group id cannot resolve.
+   */
+  private releaseFromSuggestion(suggestion: AlbumSuggestion): MusicBrainzRelease {
+    return {
+      id: "",
+      releaseGroupId: suggestion.albumMbid,
+      title: suggestion.album,
+      artist: suggestion.artist,
+      date: "",
+      year: null,
+      genres: [],
+      coverArtUrl: suggestion.imageUrl,
+    };
   }
 
   private async createNote(release: MusicBrainzRelease, status: AlbumStatus, rating: string, userNote: string, source: string = 'manual') {

@@ -210,20 +210,50 @@ export function normalizeKey(artist: string, album: string): string {
 // Trailing words that denote a release type/edition rather than the album identity.
 const TRAILING_QUALIFIERS = new Set([
   "ep", "single", "lp", "deluxe", "edition", "remaster", "remastered",
+  "reissue", "expanded", "mono", "stereo", "version", "anniversary",
 ]);
 
-function normalizeAlbum(album: string): string {
+// A year or an ordinal trailing a qualifier is part of the edition marker
+// ("Remastered 2011", "35th Anniversary Edition"). Plain numbers are not, so that
+// a sequel title like "Album 2 Deluxe" keeps its "2".
+const EDITION_NUMBER = /^(\d{4}|\d+(st|nd|rd|th))$/;
+
+export function normalizeAlbum(album: string): string {
   const tokens = normalizePart(album).split(" ").filter(Boolean);
   // Drop trailing qualifier tokens, but never reduce to empty (e.g. a self-titled "EP").
-  while (tokens.length > 1 && TRAILING_QUALIFIERS.has(tokens[tokens.length - 1])) {
-    tokens.pop();
+  let droppedQualifier = false;
+  while (tokens.length > 1) {
+    const last = tokens[tokens.length - 1];
+    if (TRAILING_QUALIFIERS.has(last)) {
+      tokens.pop();
+      droppedQualifier = true;
+      continue;
+    }
+    // The number can sit either side of its qualifier: "Remastered 2011" trails it,
+    // "35th Anniversary Edition" leads it.
+    const precededByQualifier = TRAILING_QUALIFIERS.has(tokens[tokens.length - 2]);
+    if (EDITION_NUMBER.test(last) && (droppedQualifier || precededByQualifier)) {
+      tokens.pop();
+      continue;
+    }
+    break;
   }
   return tokens.join(" ");
 }
 
-function normalizePart(value: string): string {
-  return value
-    .toLowerCase()
+// Ligatures and stroked letters survive NFKD, so map them before punctuation is
+// stripped — otherwise "Ágætis" collapses to "ag tis" and never matches "Agaetis".
+const LIGATURES: Array<[RegExp, string]> = [
+  [/æ/g, "ae"], [/œ/g, "oe"], [/ß/g, "ss"],
+  [/ø/g, "o"], [/ł/g, "l"], [/ð/g, "d"], [/þ/g, "th"],
+];
+
+export function normalizePart(value: string): string {
+  let normalized = value.toLowerCase();
+  for (const [pattern, replacement] of LIGATURES) {
+    normalized = normalized.replace(pattern, replacement);
+  }
+  return normalized
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "") // strip diacritics (e.g. Monáe -> monae)
     .replace(/[^a-z0-9]+/g, " ") // collapse punctuation/whitespace (colon, dash, etc.)
